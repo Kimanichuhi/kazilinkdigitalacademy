@@ -1,0 +1,13 @@
+{
+    "Core": true,
+    "Auth": true,
+    "User": true,
+    "Academy": true,
+    "Booking": true,
+    "Payment": true,
+    "Cms": true,
+    "Marketing": true,
+    "Notification": true,
+    "Audit": true,
+    "Admin": true
+}

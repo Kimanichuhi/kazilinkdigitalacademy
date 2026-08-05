@@ -1,0 +1,70 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Vite;
+use Symfony\Component\HttpFoundation\Response;
+
+class SecurityHeaders
+{
+    /**
+     * Sets a CSP nonce (picked up automatically by @vite/@livewireScripts)
+     * before the response is built, then attaches the security headers
+     * once the response comes back down the middleware stack.
+     */
+    public function handle(Request $request, Closure $next): Response
+    {
+        $nonce = Vite::useCspNonce();
+
+        $response = $next($request);
+
+        $response->headers->set('X-Content-Type-Options', 'nosniff');
+        $response->headers->set('X-Frame-Options', 'DENY');
+        $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
+        $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+        $response->headers->set('Content-Security-Policy', $this->contentSecurityPolicy($nonce));
+
+        // Only ever advertise HSTS over an actually-secure connection —
+        // sending it over plain HTTP in local dev would get cached by the
+        // browser and lock the dev server out until the header expires.
+        if ($request->secure()) {
+            $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+        }
+
+        return $response;
+    }
+
+    private function contentSecurityPolicy(string $nonce): string
+    {
+        // Alpine (bundled by Livewire) evaluates x-data/x-show expressions
+        // via `new Function(...)`, which CSP classifies as eval — there's
+        // no way to run this app's Alpine directives without it short of
+        // switching to Alpine's separate CSP-build with precompiled
+        // expressions, which is a much larger change than this pass.
+        $scriptSrc = "'self' 'unsafe-eval' 'nonce-{$nonce}'";
+        $connectSrc = "'self'";
+
+        if (app()->isLocal()) {
+            // Vite's dev server (HMR) runs on its own origin/port locally.
+            $scriptSrc .= ' http://localhost:5173 http://127.0.0.1:5173';
+            $connectSrc .= ' http://localhost:5173 http://127.0.0.1:5173 ws://localhost:5173 ws://127.0.0.1:5173';
+        }
+
+        return implode('; ', [
+            "default-src 'self'",
+            "script-src {$scriptSrc}",
+            // Alpine toggles the `style` attribute directly (x-show etc.)
+            // rather than through a nonced <style> tag, so style-src needs
+            // 'unsafe-inline' too — a much narrower risk than script-src.
+            "style-src 'self' 'unsafe-inline' 'nonce-{$nonce}'",
+            "img-src 'self' data: https:",
+            "font-src 'self' data:",
+            "connect-src {$connectSrc}",
+            "frame-ancestors 'none'",
+            "base-uri 'self'",
+            "form-action 'self'",
+        ]);
+    }
+}

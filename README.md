@@ -136,3 +136,4 @@ php artisan optimize:clear
 ```
 
 The homepage, booking flow, and admin dashboard continue to work; only Marketing-owned screens (Advertisements, CTAs, Stats) and the homepage's ad carousel/CTA sections go quiet. Re-enable with `php artisan module:enable Marketing`.
+"# kazilinkdigitalacademy" 

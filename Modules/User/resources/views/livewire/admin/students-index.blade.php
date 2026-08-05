@@ -1,9 +1,7 @@
 @php
     $roleColors = [
         'student' => 'bg-blue-100 text-blue-700', 'trainer' => 'bg-green-100 text-green-700',
-        'admin' => 'bg-orange-100 text-orange-700', 'super_admin' => 'bg-red-100 text-red-700',
-        'content_manager' => 'bg-purple-100 text-purple-700', 'marketing' => 'bg-pink-100 text-pink-700',
-        'finance' => 'bg-yellow-100 text-yellow-700', 'support' => 'bg-teal-100 text-teal-700',
+        'admin' => 'bg-orange-100 text-orange-700',
     ];
 @endphp
 <div class="p-6 space-y-6">

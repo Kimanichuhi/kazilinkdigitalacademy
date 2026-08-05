@@ -20,14 +20,15 @@ class UsersIndex extends Component
     public string $newRole = '';
 
     /**
-     * Granting roles (including super_admin itself) is the single most
-     * sensitive action in the admin area, so it's restricted to super_admin
-     * only rather than the whole admin-family — every other admin screen
-     * uses the broader admin.family route gate, this one needs tighter.
+     * Granting roles (including admin itself) is the single most sensitive
+     * action in the admin area, so it's restricted to admin only rather
+     * than the whole admin-family — every other admin screen uses the
+     * broader admin.family route gate, this one needs tighter (though with
+     * only 3 roles now, admin family and admin are the same set).
      */
     public function mount(): void
     {
-        abort_unless(auth()->user()?->hasRole(RoleGroups::SUPER_ADMIN), 403);
+        abort_unless(auth()->user()?->hasRole(RoleGroups::ADMIN), 403);
     }
 
     public function edit(string $userId): void
@@ -50,12 +51,12 @@ class UsersIndex extends Component
 
         $user = User::findOrFail($this->editingUserId);
 
-        $isLastSuperAdmin = $user->hasRole(RoleGroups::SUPER_ADMIN)
-            && $this->newRole !== RoleGroups::SUPER_ADMIN
-            && User::role(RoleGroups::SUPER_ADMIN)->count() <= 1;
+        $isLastAdmin = $user->hasRole(RoleGroups::ADMIN)
+            && $this->newRole !== RoleGroups::ADMIN
+            && User::role(RoleGroups::ADMIN)->count() <= 1;
 
-        if ($isLastSuperAdmin) {
-            $this->addError('newRole', 'Cannot remove the last remaining Super Admin.');
+        if ($isLastAdmin) {
+            $this->addError('newRole', 'Cannot remove the last remaining Admin.');
 
             return;
         }

@@ -66,11 +66,9 @@ class SiteSettingsForm extends Component
         ];
     }
 
-    // Includes maintenance-mode toggling and analytics/pixel IDs — narrower
-    // than the blanket admin-family gate this screen otherwise sits behind.
     public function mount(): void
     {
-        abort_unless(auth()->user()?->hasAnyRole([RoleGroups::SUPER_ADMIN, RoleGroups::ADMIN]), 403);
+        abort_unless(auth()->user()?->hasRole(RoleGroups::ADMIN), 403);
 
         $existing = SiteSetting::pluck('value', 'key');
 

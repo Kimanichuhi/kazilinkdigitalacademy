@@ -39,12 +39,7 @@ class BookingsIndex extends Component
 
     public function updateStatus(string $id, string $newStatus, BookingLifecycle $lifecycle): void
     {
-        // Approving/rejecting bookings is an operational & financial action —
-        // narrower than the blanket admin-family gate this screen otherwise
-        // sits behind (marketing/content_manager have no business here).
-        abort_unless(auth()->user()?->hasAnyRole([
-            RoleGroups::SUPER_ADMIN, RoleGroups::ADMIN, RoleGroups::SUPPORT, RoleGroups::FINANCE,
-        ]), 403);
+        abort_unless(auth()->user()?->hasRole(RoleGroups::ADMIN), 403);
 
         $booking = Booking::findOrFail($id);
         $lifecycle->transition($booking, BookingStatus::from($newStatus));
@@ -64,7 +59,7 @@ class BookingsIndex extends Component
 
     public function revealId(string $id): void
     {
-        abort_unless(auth()->user()?->hasRole(RoleGroups::SUPER_ADMIN), 403);
+        abort_unless(auth()->user()?->hasRole(RoleGroups::ADMIN), 403);
 
         $booking = Booking::findOrFail($id);
         $this->revealedIdNumber = $booking->id_number;
@@ -96,10 +91,8 @@ class BookingsIndex extends Component
             'bookings' => $bookings,
             'statuses' => BookingStatus::cases(),
             'viewingBooking' => $this->viewingId ? Booking::find($this->viewingId) : null,
-            'canRevealId' => (bool) auth()->user()?->hasRole(RoleGroups::SUPER_ADMIN),
-            'canUpdateStatus' => (bool) auth()->user()?->hasAnyRole([
-                RoleGroups::SUPER_ADMIN, RoleGroups::ADMIN, RoleGroups::SUPPORT, RoleGroups::FINANCE,
-            ]),
+            'canRevealId' => (bool) auth()->user()?->hasRole(RoleGroups::ADMIN),
+            'canUpdateStatus' => (bool) auth()->user()?->hasRole(RoleGroups::ADMIN),
         ]);
     }
 }

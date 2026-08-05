@@ -1,5 +1,5 @@
 @php
-    $adminFamilyRoles = ['admin', 'super_admin', 'content_manager', 'marketing', 'finance', 'support'];
+    $adminFamilyRoles = \Modules\Core\Support\RoleGroups::adminFamily();
     $user = auth()->user();
 @endphp
 

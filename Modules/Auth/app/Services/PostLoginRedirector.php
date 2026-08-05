@@ -6,12 +6,11 @@ use App\Models\User;
 use Modules\Core\Support\RoleGroups;
 
 /**
- * The exact 8-role redirect partition from the source
- * (app/auth/login/page.tsx:44-49, see MIGRATION-INVENTORY.md §4):
+ * Redirect partition across the app's 3 roles:
  *
- *   admin-family roles -> /admin
- *   trainer            -> /trainer
- *   everyone else      -> /student
+ *   admin   -> /admin
+ *   trainer -> /trainer
+ *   student -> /student
  */
 class PostLoginRedirector
 {

@@ -17,13 +17,9 @@ class PurchasesIndex extends Component
     #[Url]
     public string $status = '';
 
-    // Revenue/purchase data is financially sensitive — narrower than the
-    // blanket admin-family gate this screen otherwise sits behind.
     public function mount(): void
     {
-        abort_unless(auth()->user()?->hasAnyRole([
-            RoleGroups::SUPER_ADMIN, RoleGroups::ADMIN, RoleGroups::FINANCE,
-        ]), 403);
+        abort_unless(auth()->user()?->hasRole(RoleGroups::ADMIN), 403);
     }
 
     public function updatingStatus(): void

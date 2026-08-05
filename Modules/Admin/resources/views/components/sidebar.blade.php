@@ -22,7 +22,7 @@
             ['href' => '/admin/testimonials', 'label' => 'Testimonials', 'icon' => 'star'],
             ['href' => '/admin/faqs', 'label' => 'FAQs', 'icon' => 'help-circle'],
             ['href' => '/admin/resources', 'label' => 'Resources', 'icon' => 'library'],
-            ['href' => '/admin/purchases', 'label' => 'Purchases', 'icon' => 'dollar-sign', 'roles' => ['super_admin', 'admin', 'finance']],
+            ['href' => '/admin/purchases', 'label' => 'Purchases', 'icon' => 'dollar-sign', 'roles' => ['admin']],
             ['href' => '/admin/pricing-plans', 'label' => 'Pricing Plans', 'icon' => 'dollar-sign'],
             ['href' => '/admin/team-members', 'label' => 'Team Members', 'icon' => 'user-check'],
             ['href' => '/admin/pages', 'label' => 'Pages', 'icon' => 'globe'],
@@ -32,10 +32,10 @@
             ['href' => '/admin/menus', 'label' => 'Nav Menus', 'icon' => 'menu'],
         ]],
         ['label' => 'System', 'items' => [
-            ['href' => '/admin/users', 'label' => 'Users & Roles', 'icon' => 'shield', 'roles' => ['super_admin']],
+            ['href' => '/admin/users', 'label' => 'Users & Roles', 'icon' => 'shield', 'roles' => ['admin']],
             ['href' => '/admin/notifications', 'label' => 'Notifications', 'icon' => 'bell'],
             ['href' => '/admin/audit-log', 'label' => 'Audit Log', 'icon' => 'history'],
-            ['href' => '/admin/settings', 'label' => 'Settings', 'icon' => 'settings', 'roles' => ['super_admin', 'admin']],
+            ['href' => '/admin/settings', 'label' => 'Settings', 'icon' => 'settings', 'roles' => ['admin']],
         ]],
     ];
     $isActive = function (string $href, bool $exact = false) {

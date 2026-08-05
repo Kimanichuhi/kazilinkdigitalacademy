@@ -92,10 +92,10 @@ class TrainersIndex extends Component
     }
 
     // Permanent deletion is destructive and irreversible — restricted to
-    // super_admin, unlike the regular (now soft) delete above.
+    // admin, unlike the regular (now soft) delete above.
     public function forceDelete(string $id): void
     {
-        abort_unless(auth()->user()?->hasRole(RoleGroups::SUPER_ADMIN), 403);
+        abort_unless(auth()->user()?->hasRole(RoleGroups::ADMIN), 403);
 
         Trainer::withTrashed()->findOrFail($id)->forceDelete();
     }
@@ -106,7 +106,7 @@ class TrainersIndex extends Component
             'trainers' => ($this->showTrashed ? Trainer::onlyTrashed() : Trainer::query())
                 ->orderBy('order_index')
                 ->paginate(20),
-            'canForceDelete' => (bool) auth()->user()?->hasRole(RoleGroups::SUPER_ADMIN),
+            'canForceDelete' => (bool) auth()->user()?->hasRole(RoleGroups::ADMIN),
         ]);
     }
 }

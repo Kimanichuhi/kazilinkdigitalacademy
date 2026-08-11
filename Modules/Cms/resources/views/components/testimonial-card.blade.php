@@ -47,6 +47,11 @@
             @if (! empty($testimonial['student_title']))
                 <p class="text-xs text-muted-foreground">{{ $testimonial['student_title'] }}</p>
             @endif
+            @if (! empty($testimonial['location']) || ! empty($testimonial['course_completed']))
+                <p class="text-xs text-brand-600">
+                    {{ $testimonial['location'] ?? '' }}{{ (! empty($testimonial['location']) && ! empty($testimonial['course_completed'])) ? ' · ' : '' }}{{ $testimonial['course_completed'] ?? '' }}
+                </p>
+            @endif
         </div>
     </div>
 </div>

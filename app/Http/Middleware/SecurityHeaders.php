@@ -44,21 +44,29 @@ class SecurityHeaders
         // switching to Alpine's separate CSP-build with precompiled
         // expressions, which is a much larger change than this pass.
         $scriptSrc = "'self' 'unsafe-eval' 'nonce-{$nonce}'";
+        $styleSrc = "'self' 'unsafe-inline'";
         $connectSrc = "'self'";
 
         if (app()->isLocal()) {
             // Vite's dev server (HMR) runs on its own origin/port locally.
             $scriptSrc .= ' http://localhost:5173 http://127.0.0.1:5173';
+            $styleSrc .= ' http://localhost:5173 http://127.0.0.1:5173';
             $connectSrc .= ' http://localhost:5173 http://127.0.0.1:5173 ws://localhost:5173 ws://127.0.0.1:5173';
         }
 
         return implode('; ', [
             "default-src 'self'",
             "script-src {$scriptSrc}",
-            // Alpine toggles the `style` attribute directly (x-show etc.)
-            // rather than through a nonced <style> tag, so style-src needs
-            // 'unsafe-inline' too — a much narrower risk than script-src.
-            "style-src 'self' 'unsafe-inline' 'nonce-{$nonce}'",
+            // Alpine toggles the `style` attribute directly (x-show etc.),
+            // and several views set inline background-image/color styles
+            // (hero/ad/CTA banners), so style-src needs 'unsafe-inline'.
+            // Deliberately no nonce here: per the CSP spec, browsers that
+            // support nonce-sources ignore 'unsafe-inline' whenever a
+            // nonce is also present in the same directive — pairing them
+            // silently disabled every inline style attribute in the app.
+            // Nothing in this codebase renders a nonced <style> tag, so
+            // there's no nonce-only content to protect here anyway.
+            "style-src {$styleSrc}",
             "img-src 'self' data: https:",
             "font-src 'self' data:",
             "connect-src {$connectSrc}",

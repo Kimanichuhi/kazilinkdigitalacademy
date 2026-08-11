@@ -1,6 +1,7 @@
 @php
     $hero = $blocks['hero'][0]['content'] ?? null;
     $mvv = collect($blocks['mission_vision_value'] ?? []);
+    $coreValues = collect($blocks['core_value'] ?? []);
     $story = $blocks['story'][0]['content'] ?? null;
     $timeline = collect($blocks['timeline_item'] ?? []);
 @endphp
@@ -15,7 +16,7 @@
 
     @if ($mvv->isNotEmpty())
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div class="grid sm:grid-cols-3 gap-5">
+            <div class="grid sm:grid-cols-2 gap-5">
                 @foreach ($mvv as $item)
                     <div class="bg-card border border-border rounded-2xl p-6 text-center">
                         <div class="w-12 h-12 rounded-xl bg-brand-50 flex items-center justify-center mx-auto mb-4">
@@ -24,6 +25,20 @@
                         <h3 class="font-bold text-lg mb-2">{{ $item['content']['heading'] }}</h3>
                         <p class="text-sm text-muted-foreground">{{ $item['content']['body'] }}</p>
                     </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
+    @if ($coreValues->isNotEmpty())
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 text-center">
+            <h2 class="font-black text-2xl mb-6">Core Values</h2>
+            <div class="flex flex-wrap justify-center gap-3">
+                @foreach ($coreValues as $item)
+                    <span class="inline-flex items-center gap-1.5 bg-brand-50 text-brand-700 text-sm font-semibold px-4 py-2 rounded-full">
+                        <x-core::icon name="check-circle" class="w-3.5 h-3.5" />
+                        {{ $item['content']['heading'] }}
+                    </span>
                 @endforeach
             </div>
         </div>

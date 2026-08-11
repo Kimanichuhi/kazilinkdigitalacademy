@@ -23,7 +23,7 @@ class Program extends BaseModel
         'thumbnail_url', 'gallery_urls', 'duration_weeks', 'duration_label', 'level',
         'delivery_mode', 'price', 'original_price', 'currency', 'is_featured', 'is_active',
         'is_published', 'rating', 'review_count', 'enrollment_count', 'curriculum',
-        'outcomes', 'requirements', 'seo_title', 'seo_description', 'seo_keywords', 'order_index',
+        'outcomes', 'career_opportunities', 'requirements', 'seo_title', 'seo_description', 'seo_keywords', 'order_index',
     ];
 
     protected function casts(): array
@@ -32,6 +32,7 @@ class Program extends BaseModel
             'gallery_urls' => 'array',
             'curriculum' => 'array',
             'outcomes' => 'array',
+            'career_opportunities' => 'array',
             'requirements' => 'array',
             'price' => 'decimal:2',
             'original_price' => 'decimal:2',

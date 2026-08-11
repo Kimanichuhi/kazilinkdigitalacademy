@@ -1,9 +1,19 @@
 @php
     $adminFamilyRoles = \Modules\Core\Support\RoleGroups::adminFamily();
     $user = auth()->user();
+    $primaryNavItems = array_slice($navItems, 0, 6);
+    $secondaryNavItems = array_slice($navItems, 6);
 @endphp
 
-<div x-data="{
+@if ($announcement)
+    <div class="announcement-bar text-white text-center py-2 text-sm font-medium px-4">
+        <span>{{ $announcement }}</span>
+        <a href="{{ url('/booking') }}" class="ml-3 underline font-bold hover:no-underline">Enroll Now &rarr;</a>
+    </div>
+@endif
+
+<nav
+    x-data="{
         mobileOpen: false,
         scrolled: false,
         userMenuOpen: false,
@@ -15,34 +25,25 @@
         },
     }"
     x-init="window.addEventListener('scroll', () => { scrolled = window.scrollY > 20 }, { passive: true })"
+    :class="scrolled ? 'bg-white/95 dark:bg-gray-950/95 backdrop-blur-lg shadow-sm border-b border-border' : 'bg-white dark:bg-gray-950'"
+    class="sticky top-0 z-50 w-full transition-all duration-300"
 >
-    @if ($announcement)
-        <div class="announcement-bar text-white text-center py-2 text-sm font-medium px-4">
-            <span>{{ $announcement }}</span>
-            <a href="{{ url('/booking') }}" class="ml-3 underline font-bold hover:no-underline">Enroll Now &rarr;</a>
-        </div>
-    @endif
-
-    <nav
-        :class="scrolled ? 'bg-white/95 dark:bg-gray-950/95 backdrop-blur-lg shadow-sm border-b border-border' : 'bg-white dark:bg-gray-950'"
-        class="sticky top-0 z-50 w-full transition-all duration-300"
-    >
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
+            <div class="flex items-center justify-between h-16 gap-4">
                 <!-- Logo -->
-                <a href="{{ url('/') }}" class="flex items-center group">
-                    <div class="dark:bg-white dark:rounded-lg dark:px-2 dark:py-1.5">
-                        <img src="{{ asset('kazilink-logo.png') }}" alt="{{ $siteName }}" class="h-14 w-auto">
+                <a href="{{ url('/') }}" class="flex items-center group flex-shrink-0">
+                    <div class="dark:bg-white dark:rounded-lg dark:px-2 dark:py-1">
+                        <img src="{{ asset('kazilink-logo.png') }}" alt="{{ $siteName }}" class="h-10 w-auto">
                     </div>
                 </a>
 
                 <!-- Desktop nav -->
-                <div class="hidden lg:flex items-center gap-1">
-                    @foreach ($navItems as $item)
+                <div class="hidden xl:flex items-center gap-1 min-w-0">
+                    @foreach ($primaryNavItems as $item)
                         <div class="relative group">
                             <a
                                 href="{{ $item['url'] ?? '#' }}"
-                                class="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->is(ltrim($item['url'] ?? '#', '/')) ? 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950' : 'text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-gray-50 dark:hover:bg-gray-800' }}"
+                                class="flex items-center gap-1 px-2.5 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap {{ request()->is(ltrim($item['url'] ?? '#', '/')) ? 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950' : 'text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-gray-50 dark:hover:bg-gray-800' }}"
                             >
                                 {{ $item['label'] }}
                                 @if (! empty($item['children']))
@@ -63,6 +64,22 @@
                             @endif
                         </div>
                     @endforeach
+
+                    @if (count($secondaryNavItems) > 0)
+                        <div class="relative group">
+                            <button type="button" class="flex items-center gap-1 px-2.5 py-2 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                More
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                            </button>
+                            <div class="absolute top-full right-0 mt-1 w-52 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 p-1">
+                                @foreach ($secondaryNavItems as $item)
+                                    <a href="{{ $item['url'] ?? '#' }}" class="block px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-950 rounded-lg transition-colors">
+                                        {{ $item['label'] }}
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
                 <!-- Right actions -->
@@ -124,7 +141,7 @@
                     @endif
 
                     <!-- Mobile menu button -->
-                    <button @click="mobileOpen = !mobileOpen" class="lg:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    <button @click="mobileOpen = !mobileOpen" class="xl:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                         <svg x-show="!mobileOpen" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M4 6h16M4 18h16"/></svg>
                         <svg x-show="mobileOpen" x-cloak xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
                     </button>
@@ -133,7 +150,7 @@
         </div>
 
         <!-- Mobile menu -->
-        <div x-show="mobileOpen" x-cloak class="lg:hidden border-t border-border bg-white dark:bg-gray-950 px-4 py-4 space-y-1">
+        <div x-show="mobileOpen" x-cloak class="xl:hidden border-t border-border bg-white dark:bg-gray-950 px-4 py-4 space-y-1">
             @foreach ($navItems as $item)
                 <a
                     href="{{ $item['url'] ?? '#' }}"
@@ -150,4 +167,3 @@
             @endguest
         </div>
     </nav>
-</div>

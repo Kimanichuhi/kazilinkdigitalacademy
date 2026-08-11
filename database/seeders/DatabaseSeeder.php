@@ -13,9 +13,11 @@ use Modules\User\Database\Seeders\UserDatabaseSeeder;
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Seed the application's database. Order matters: User creates the 8
+     * Seed the application's database. Order matters: User creates the 3
      * roles + one demo user per role before any other module seeds data
-     * that references a user (Booking, Notification).
+     * that references a user (Booking, Notification); Academy must run
+     * before Cms so CmsDatabaseSeeder::seedSuccessStories() can link
+     * testimonials to real programs by title.
      */
     public function run(): void
     {

@@ -119,9 +119,22 @@
                                 </div>
                             </div>
                         @endif
+                        @if (! empty($program['career_opportunities']))
+                            <div>
+                                <h2 class="text-2xl font-bold mb-4">Career Opportunities</h2>
+                                <div class="grid sm:grid-cols-2 gap-3">
+                                    @foreach ($program['career_opportunities'] as $career)
+                                        <div class="flex items-start gap-2">
+                                            <x-core::icon name="user-check" class="w-5 h-5 text-brand-500 flex-shrink-0 mt-0.5" />
+                                            <span class="text-sm text-foreground">{{ $career }}</span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
                         @if (! empty($program['requirements']))
                             <div>
-                                <h2 class="text-2xl font-bold mb-4">Requirements</h2>
+                                <h2 class="text-2xl font-bold mb-4">Who This Course Is For</h2>
                                 <ul class="space-y-2">
                                     @foreach ($program['requirements'] as $requirement)
                                         <li class="flex items-start gap-2 text-sm text-muted-foreground">
@@ -232,6 +245,24 @@
                         </div>
                     @endif
                 </div>
+            </div>
+        </div>
+
+        <!-- Courses footer message -->
+        <div class="bg-gradient-to-br from-gray-950 via-navy-950 to-gray-900 py-16">
+            <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 class="text-2xl sm:text-3xl font-black text-white mb-2">Your Future Doesn't Begin After Graduation.</h2>
+                <p class="text-xl sm:text-2xl font-black text-brand-400 mb-6">It Begins When You Decide to Learn.</p>
+                <h3 class="text-white font-bold mb-2">Beyond the Certificate</h3>
+                <p class="text-gray-400 leading-relaxed mb-2">
+                    At KAZI Link Academy, our goal is not just to teach you a skill—we prepare you to use that skill with confidence.
+                </p>
+                <p class="text-gray-400 leading-relaxed mb-8">
+                    When you complete your course, you leave with practical experience, mentorship, confidence and a portfolio where applicable.
+                </p>
+                <a href="{{ url('/programs') }}" class="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-bold px-7 py-3.5 rounded-xl transition-all hover:scale-[1.02] shadow-2xl shadow-brand-500/40">
+                    Browse All Courses <x-core::icon name="arrow-right" class="w-4 h-4" />
+                </a>
             </div>
         </div>
     </div>

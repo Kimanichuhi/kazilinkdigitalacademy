@@ -4,6 +4,7 @@ namespace Modules\Cms\Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
+use Modules\Academy\Models\Program;
 use Modules\Cms\Models\BlogCategory;
 use Modules\Cms\Models\BlogPost;
 use Modules\Cms\Models\Faq;
@@ -30,11 +31,13 @@ class CmsDatabaseSeeder extends Seeder
             ->count(6)
             ->recycle($blogCategories)
             ->create();
-        Testimonial::factory()->count(8)->create();
         Faq::factory()->count(10)->create();
         Resource::factory()->count(5)->create();
         TeamMember::factory()->count(4)->create();
         Partner::factory()->count(6)->create();
+
+        $this->seedFounder();
+        $this->seedSuccessStories();
 
         foreach ([
             ['title' => 'Terms & Conditions', 'slug' => 'terms'],
@@ -52,7 +55,11 @@ class CmsDatabaseSeeder extends Seeder
         $this->seedPricingPlans();
 
         $settings = [
-            'site_name' => ['value' => 'Kazilink Digital Academy', 'category' => 'general', 'label' => 'Site Name'],
+            'site_name' => ['value' => 'KAZI Link Academy', 'category' => 'general', 'label' => 'Site Name'],
+            'hero_title' => ['value' => "Learn Today.\nEarn Tomorrow.\nLead the Future.", 'category' => 'homepage', 'label' => 'Hero Title'],
+            'hero_subtitle' => ['value' => "At KAZI Link Academy, we equip ambitious learners with practical digital skills that lead to real opportunities. Whether you're a student, graduate, job seeker, entrepreneur, or professional, our expert-led training prepares you to earn online, grow your career, and thrive in today's digital economy.", 'category' => 'homepage', 'label' => 'Hero Subtitle'],
+            'hero_cta_primary' => ['value' => 'Enroll Now', 'category' => 'homepage', 'label' => 'Hero Primary Button'],
+            'hero_cta_secondary' => ['value' => 'Explore Courses', 'category' => 'homepage', 'label' => 'Hero Secondary Button'],
             'contact_email' => ['value' => 'hello@kazilink.academy', 'category' => 'contact', 'label' => 'Contact Email'],
             'contact_phone' => ['value' => '+254700000000', 'category' => 'contact', 'label' => 'Contact Phone'],
             'contact_address' => ['value' => 'Westlands, Nairobi, Kenya', 'category' => 'contact', 'label' => 'Contact Address'],
@@ -63,7 +70,7 @@ class CmsDatabaseSeeder extends Seeder
         ];
 
         foreach ($settings as $key => $attrs) {
-            SiteSetting::firstOrCreate(['key' => $key], $attrs);
+            SiteSetting::updateOrCreate(['key' => $key], $attrs);
         }
 
         $headerMenu = NavMenu::firstOrCreate(
@@ -99,11 +106,40 @@ class CmsDatabaseSeeder extends Seeder
             ['title' => 'About Us', 'is_published' => true]
         );
 
-        if ($page->blocks()->exists()) {
-            return;
+        $hasBlocks = $page->blocks()->exists();
+
+        // Mission/Vision/Core Values (content brief, 2026-08-06) — always
+        // rewritten regardless of the guard below, since this content
+        // changed even on an already-seeded page.
+        $page->blocks()->where('type', 'mission_vision_value')->delete();
+        $page->blocks()->where('type', 'core_value')->delete();
+
+        $order = 1;
+
+        foreach ([
+            ['heading' => 'Our Mission', 'body' => 'To empower individuals with practical digital skills that unlock employment, entrepreneurship and lifelong success in the digital economy.', 'icon' => 'target'],
+            ['heading' => 'Our Vision', 'body' => "To become Africa's leading digital skills academy, transforming lives through accessible, innovative and career-focused education.", 'icon' => 'globe'],
+        ] as $item) {
+            PageBlock::create([
+                'page_id' => $page->id,
+                'type' => 'mission_vision_value',
+                'content' => ['heading' => $item['heading'], 'subtitle' => null, 'body' => $item['body'], 'meta' => ['icon' => $item['icon']]],
+                'order_index' => $order++,
+            ]);
         }
 
-        $order = 0;
+        foreach (['Excellence', 'Innovation', 'Integrity', 'Empowerment', 'Collaboration'] as $value) {
+            PageBlock::create([
+                'page_id' => $page->id,
+                'type' => 'core_value',
+                'content' => ['heading' => $value, 'subtitle' => null, 'body' => null, 'meta' => null],
+                'order_index' => $order++,
+            ]);
+        }
+
+        if ($hasBlocks) {
+            return;
+        }
 
         PageBlock::create([
             'page_id' => $page->id,
@@ -116,19 +152,6 @@ class CmsDatabaseSeeder extends Seeder
             ],
             'order_index' => $order++,
         ]);
-
-        foreach ([
-            ['heading' => 'Our Mission', 'body' => 'To make practical digital income skills accessible to every Kenyan, regardless of background.', 'icon' => 'target'],
-            ['heading' => 'Our Vision', 'body' => 'A Kenya where anyone with an internet connection can build a sustainable online income.', 'icon' => 'globe'],
-            ['heading' => 'Our Values', 'body' => 'Practical over theoretical. Results over certificates. Community over competition.', 'icon' => 'award'],
-        ] as $item) {
-            PageBlock::create([
-                'page_id' => $page->id,
-                'type' => 'mission_vision_value',
-                'content' => ['heading' => $item['heading'], 'subtitle' => null, 'body' => $item['body'], 'meta' => ['icon' => $item['icon']]],
-                'order_index' => $order++,
-            ]);
-        }
 
         PageBlock::create([
             'page_id' => $page->id,
@@ -264,6 +287,107 @@ class CmsDatabaseSeeder extends Seeder
                 'is_highlighted' => $plan['is_highlighted'],
                 'is_published' => true,
                 'order_index' => $plan['order_index'],
+            ]);
+        }
+    }
+
+    /**
+     * Homepage CEO MESSAGE section source (content brief, 2026-08-06).
+     */
+    public function seedFounder(): void
+    {
+        TeamMember::updateOrCreate(
+            ['email' => 'stephen@kazilink.academy'],
+            [
+                'full_name' => 'Stephen Wanyoike Waithaka',
+                'title' => 'Founder',
+                'bio' => "Hello and welcome.\n\nMy name is Stephen Wanyoike Waithaka, Founder of KAZI Link Academy.\n\nI believe talent is everywhere, but opportunities are not always equally available. That is why we created KAZI Link Academy—to bridge the gap between education, digital skills, and meaningful employment.\n\nOur mission is simple: to empower learners with practical, market-ready skills that can generate income, create businesses, and transform communities.\n\nWhether you are taking your first steps into the digital world or looking to advance your professional career, we are committed to walking the journey with you.\n\nYour success is our greatest achievement.\n\nWelcome to the future of learning and earning.",
+                'avatar_url' => null,
+                'department' => 'leadership',
+                'is_featured' => true,
+                'is_active' => true,
+                'order_index' => 0,
+            ]
+        );
+    }
+
+    /**
+     * The 4 curated BLOG / SUCCESS STORIES students (content brief,
+     * 2026-08-06) replace the previous 8 factory-fake testimonials.
+     *
+     * The brief referenced story details (achievement/quote) by a
+     * footnoted "source document" that wasn't included with the brief —
+     * only name/county/course were given. The `content`/`achievement`
+     * copy below is drafted to fit those facts, not transcribed from a
+     * real source, and should be swapped for the actual stories once
+     * available.
+     */
+    public function seedSuccessStories(): void
+    {
+        Testimonial::query()->delete();
+
+        foreach ([
+            [
+                'student_name' => 'Grace Wanjiku',
+                'location' => 'Nakuru County',
+                'course_completed' => 'Freelancing & Online Work',
+                'course_title' => 'Freelancing & Online Work',
+                'achievement' => 'Now earns a full-time income as an academic writer and freelancer',
+                'student_title' => 'Freelance Academic Writer',
+                'content' => 'Before KAZI Link Academy I had no idea freelancing was even possible from Nakuru. The Academic Writing & Freelancing course gave me a real skill and a real client pipeline — I now work with clients online full-time.',
+                'income_before' => 'KES 0',
+                'income_after' => 'KES 45,000',
+            ],
+            [
+                'student_name' => 'Martin Ndungu',
+                'location' => 'Nyandarua County',
+                'course_completed' => 'Artificial Intelligence',
+                'course_title' => 'Artificial Intelligence',
+                'achievement' => 'Now offers AI consulting and content services to local businesses',
+                'student_title' => 'AI Consultant',
+                'content' => 'The AI & ChatGPT Masterclass completely changed how I work. I went from barely using a computer for business to building AI workflows and consulting for other entrepreneurs in Nyandarua.',
+                'income_before' => 'KES 0',
+                'income_after' => 'KES 60,000',
+            ],
+            [
+                'student_name' => 'Mercy Njeri',
+                'location' => 'Nyandarua County',
+                'course_completed' => 'Digital Marketing',
+                'course_title' => 'Digital Marketing',
+                'achievement' => 'Runs paid ad campaigns for local businesses as a marketing consultant',
+                'student_title' => 'Digital Marketing Consultant',
+                'content' => 'I took the Digital Marketing course to help grow my own small business, and ended up discovering a whole new career. I now manage social media and ad campaigns for other businesses too.',
+                'income_before' => 'KES 5,000',
+                'income_after' => 'KES 38,000',
+            ],
+            [
+                'student_name' => 'Sarafina Njeri',
+                'location' => 'Nyandarua County',
+                'course_completed' => 'Creative Design',
+                'course_title' => 'Creative Design',
+                'achievement' => 'Builds brand identities and social media graphics as a freelance designer',
+                'student_title' => 'Freelance Graphic Designer',
+                'content' => 'Graphic Design felt like a dream until KAZI Link Academy made it practical. I learned Canva and Photoshop and now design branding and social media content for clients as a freelancer.',
+                'income_before' => 'KES 0',
+                'income_after' => 'KES 32,000',
+            ],
+        ] as $index => $story) {
+            Testimonial::create([
+                'program_id' => Program::where('title', $story['course_title'])->value('id'),
+                'student_name' => $story['student_name'],
+                'student_title' => $story['student_title'],
+                'student_avatar_url' => null,
+                'location' => $story['location'],
+                'course_completed' => $story['course_completed'],
+                'achievement' => $story['achievement'],
+                'content' => $story['content'],
+                'rating' => 5,
+                'income_before' => $story['income_before'],
+                'income_after' => $story['income_after'],
+                'video_url' => null,
+                'is_featured' => true,
+                'is_published' => true,
+                'order_index' => $index,
             ]);
         }
     }

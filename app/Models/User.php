@@ -40,6 +40,7 @@ class User extends Authenticatable
         'avatar_url',
         'bio',
         'is_active',
+        'email_notifications_opt_in',
     ];
 
     /**
@@ -63,6 +64,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'email_notifications_opt_in' => 'boolean',
         ];
     }
 

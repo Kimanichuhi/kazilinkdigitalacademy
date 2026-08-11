@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 use Modules\Auth\Http\Requests\RegisterRequest;
 use Modules\Core\Support\RoleGroups;
+use Spatie\Permission\Models\Role;
 
 class RegisteredUserController extends Controller
 {
@@ -39,9 +40,12 @@ class RegisteredUserController extends Controller
                 'email' => $request->email,
                 'phone' => $request->phone,
                 'password' => Hash::make($request->password),
+                'email_notifications_opt_in' => $request->boolean('email_notifications_opt_in'),
             ]);
 
-            $user->assignRole(RoleGroups::STUDENT);
+            $studentRole = Role::findOrCreate(RoleGroups::STUDENT);
+
+            $user->assignRole($studentRole);
 
             return $user;
         });

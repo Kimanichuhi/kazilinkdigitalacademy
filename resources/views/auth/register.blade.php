@@ -112,6 +112,28 @@
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
                     </div>
+
+                    <div class="space-y-2.5 pt-1">
+                        <label class="flex items-start gap-2 text-sm text-muted-foreground">
+                            <input type="checkbox" name="email_notifications_opt_in" value="1" {{ old('email_notifications_opt_in') ? 'checked' : '' }} class="mt-0.5 rounded border-border text-brand-500 focus:ring-brand-500">
+                            <span>Send me email notifications about my courses and account</span>
+                        </label>
+                        <label class="flex items-start gap-2 text-sm text-muted-foreground">
+                            <input type="checkbox" name="not_a_robot" value="1" required class="mt-0.5 rounded border-border text-brand-500 focus:ring-brand-500">
+                            <span>I'm not a robot</span>
+                        </label>
+                        @error('not_a_robot')
+                            <p class="text-red-500 text-xs">{{ $message }}</p>
+                        @enderror
+                        <label class="flex items-start gap-2 text-sm text-muted-foreground">
+                            <input type="checkbox" name="accept_terms" value="1" required class="mt-0.5 rounded border-border text-brand-500 focus:ring-brand-500">
+                            <span>I accept the <a href="{{ url('/terms') }}" target="_blank" class="text-brand-600 hover:underline">Terms &amp; Conditions</a></span>
+                        </label>
+                        @error('accept_terms')
+                            <p class="text-red-500 text-xs">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <button type="submit" class="w-full bg-brand-500 hover:bg-brand-600 text-white gap-2 inline-flex items-center justify-center font-semibold px-6 py-2.5 rounded-xl transition-colors">
                         Create Account
                     </button>

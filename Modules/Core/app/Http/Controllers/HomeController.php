@@ -8,6 +8,7 @@ use Modules\Academy\Contracts\CohortLookupContract;
 use Modules\Academy\Contracts\ProgramLookupContract;
 use Modules\Academy\Contracts\TrainerLookupContract;
 use Modules\Cms\Contracts\SiteSettingLookupContract;
+use Modules\Cms\Contracts\TeamMemberLookupContract;
 use Modules\Cms\Contracts\TestimonialLookupContract;
 use Modules\Core\Support\OptionalContract;
 use Modules\Marketing\Contracts\AdvertisementLookupContract;
@@ -32,6 +33,7 @@ class HomeController extends Controller
     ): View {
         $settings = OptionalContract::resolve(SiteSettingLookupContract::class);
         $testimonials = OptionalContract::resolve(TestimonialLookupContract::class);
+        $teamMembers = OptionalContract::resolve(TeamMemberLookupContract::class);
         $statistics = OptionalContract::resolve(StatisticLookupContract::class);
         $ctas = OptionalContract::resolve(CtaLookupContract::class);
         $advertisements = OptionalContract::resolve(AdvertisementLookupContract::class);
@@ -45,6 +47,7 @@ class HomeController extends Controller
             'programs' => $programs->listFeatured(6),
             'cohorts' => $cohorts->upcomingAcrossPrograms(4),
             'testimonials' => $testimonials?->listFeatured(6) ?? [],
+            'founder' => $teamMembers?->findFounder(),
             'trainers' => $trainers->listFeatured(4),
             'stats' => $stats,
             'statsByKey' => collect($stats)->filter(fn ($s) => $s['key'])->keyBy('key'),

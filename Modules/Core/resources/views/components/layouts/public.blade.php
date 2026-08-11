@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ? $title.' | '.config('app.name') : config('app.name').' — Learn. Earn. Thrive Online.' }}</title>
+    <title>{{ $title ? $title.' | '.config('app.name') : config('app.name').' - Learn. Earn. Thrive Online.' }}</title>
     <meta name="description" content="Kenya's #1 online income skills academy. Learn practical digital skills and start earning from anywhere.">
     <link rel="icon" href="{{ asset('favicon.jpeg') }}">
     <script nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}">

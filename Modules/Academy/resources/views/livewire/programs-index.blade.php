@@ -3,9 +3,9 @@
     <div class="bg-gradient-to-br from-gray-950 via-navy-950 to-gray-900 py-16 sm:py-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <span class="text-brand-400 font-semibold text-sm uppercase tracking-wider mb-3 block">Training Programs</span>
-            <h1 class="text-4xl sm:text-5xl font-black text-white mb-4">Learn Skills That Pay</h1>
+            <h1 class="text-4xl sm:text-5xl font-black text-white mb-4">Find the Right Course for Your Future</h1>
             <p class="text-gray-400 text-lg max-w-2xl mx-auto">
-                Choose from {{ $programs->total() > 0 ? $programs->total().'+' : 'dozens of' }} practical programs designed to help you earn money online.
+                Whether you want to earn online, start a business, improve your career, or master digital technology, we have a course designed to help you succeed.
             </p>
         </div>
     </div>

@@ -69,15 +69,13 @@
                         <label class="text-xs font-medium mb-1 block">Bio</label>
                         <textarea wire:model="formData.bio" rows="3" class="w-full px-3 py-2 text-sm border border-border rounded-xl bg-background focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"></textarea>
                     </div>
-                    <div class="grid sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-xs font-medium mb-1 block">Avatar URL</label>
-                            <input wire:model="formData.avatar_url" class="w-full px-3 py-2 text-sm border border-border rounded-xl bg-background focus:outline-none focus:ring-2 focus:ring-brand-500">
-                        </div>
-                        <div>
-                            <label class="text-xs font-medium mb-1 block">Email</label>
-                            <input type="email" wire:model="formData.email" class="w-full px-3 py-2 text-sm border border-border rounded-xl bg-background focus:outline-none focus:ring-2 focus:ring-brand-500">
-                        </div>
+                    <div>
+                        <label class="text-xs font-medium mb-1 block">Photo</label>
+                        <livewire:core::image-upload wire:model="formData.avatar_url" folder="team" label="Photo" shape="circle" :key="'avatar-'.($editingId ?? 'new')" />
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium mb-1 block">Email</label>
+                        <input type="email" wire:model="formData.email" class="w-full px-3 py-2 text-sm border border-border rounded-xl bg-background focus:outline-none focus:ring-2 focus:ring-brand-500">
                     </div>
                     <div class="flex gap-6">
                         <label class="flex items-center gap-2 cursor-pointer">

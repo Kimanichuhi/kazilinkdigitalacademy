@@ -19,6 +19,7 @@ class Testimonial extends BaseModel
 
     protected $fillable = [
         'program_id', 'student_name', 'student_title', 'student_avatar_url', 'content',
+        'location', 'course_completed', 'achievement',
         'rating', 'income_before', 'income_after', 'video_url', 'is_featured',
         'is_published', 'order_index',
     ];

@@ -10,6 +10,10 @@ use Illuminate\Validation\Rules\Password;
 /**
  * Mirrors the source's register zod schema field-for-field
  * (app/auth/register/page.tsx, see MIGRATION-INVENTORY.md §5).
+ *
+ * `not_a_robot` is a plain required checkbox, not a real bot-detection
+ * service (no reCAPTCHA/hCaptcha is wired into this app) — it just blocks
+ * submission until checked.
  */
 class RegisterRequest extends FormRequest
 {
@@ -26,6 +30,9 @@ class RegisterRequest extends FormRequest
             'phone' => ['required', 'string', 'min:9'],
             'password' => ['required', 'string', Password::defaults()],
             'confirm_password' => ['required', 'same:password'],
+            'email_notifications_opt_in' => ['sometimes', 'boolean'],
+            'not_a_robot' => ['accepted'],
+            'accept_terms' => ['accepted'],
         ];
     }
 
@@ -40,6 +47,8 @@ class RegisterRequest extends FormRequest
             'phone.min' => 'Valid phone required',
             'password.required' => 'Password is required',
             'confirm_password.same' => 'Passwords do not match',
+            'not_a_robot.accepted' => 'Please confirm you are not a robot',
+            'accept_terms.accepted' => 'You must accept the Terms & Conditions',
         ];
     }
 }

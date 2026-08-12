@@ -25,7 +25,31 @@ class SecurityHeaders
             if (file_exists($hotPath)) {
                 try {
                     $current = trim(file_get_contents($hotPath));
-                    $desired = $request->getSchemeAndHttpHost();
+
+                    // Prefer an explicit env override if present (useful
+                    // when you expose the Vite server through a tunnel).
+                    $envOrigin = env('VITE_DEV_SERVER_ORIGIN');
+
+                    if ($envOrigin) {
+                        $desired = $envOrigin;
+                    } else {
+                        // Build a sensible dev-server origin from the
+                        // incoming request. If the host is localhost/127.0.0.1
+                        // assume Vite runs on port 5173. If the host appears
+                        // to be a public tunnel (ngrok), don't append a port.
+                        $schemeHost = $request->getSchemeAndHttpHost();
+                        if (preg_match('/:\d+$/', $schemeHost)) {
+                            $desired = $schemeHost;
+                        } else {
+                            $hostOnly = $request->getHost();
+                            if (in_array($hostOnly, ['localhost', '127.0.0.1'])) {
+                                $desired = $request->getScheme() . '://' . $hostOnly . ':5173';
+                            } else {
+                                $desired = $schemeHost;
+                            }
+                        }
+                    }
+
                     if ($current !== $desired) {
                         @file_put_contents($hotPath, $desired);
                     }

@@ -16,6 +16,25 @@ class SecurityHeaders
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // If a Vite hot file exists in local dev, ensure it points to the
+        // current incoming host (ngrok tunnels present the public host
+        // on the request). This lets the laravel-vite-plugin generate
+        // asset URLs that match the tunnel host automatically.
+        if (app()->isLocal()) {
+            $hotPath = public_path('hot');
+            if (file_exists($hotPath)) {
+                try {
+                    $current = trim(file_get_contents($hotPath));
+                    $desired = $request->getSchemeAndHttpHost();
+                    if ($current !== $desired) {
+                        @file_put_contents($hotPath, $desired);
+                    }
+                } catch (\Throwable $e) {
+                    // best-effort only; do not interrupt the request
+                }
+            }
+        }
+
         $nonce = Vite::useCspNonce();
 
         $response = $next($request);
@@ -49,9 +68,25 @@ class SecurityHeaders
 
         if (app()->isLocal()) {
             // Vite's dev server (HMR) runs on its own origin/port locally.
+            // When using tunnels (ngrok) the incoming request host should
+            // also be allowed by CSP so the browser can fetch HMR/assets.
             $scriptSrc .= ' http://localhost:5173 http://127.0.0.1:5173';
             $styleSrc .= ' http://localhost:5173 http://127.0.0.1:5173';
             $connectSrc .= ' http://localhost:5173 http://127.0.0.1:5173 ws://localhost:5173 ws://127.0.0.1:5173';
+
+            try {
+                $host = request()->getSchemeAndHttpHost();
+                if (! empty($host)) {
+                    $scriptSrc .= ' ' . $host;
+                    $styleSrc .= ' ' . $host;
+
+                    // also allow the websocket variant for the same host
+                    $wsHost = preg_replace('#^https?#', 'ws', $host);
+                    $connectSrc .= ' ' . $host . ' ' . $wsHost;
+                }
+            } catch (\Throwable $e) {
+                // ignore request-related errors in CLI/testing
+            }
         }
 
         return implode('; ', [

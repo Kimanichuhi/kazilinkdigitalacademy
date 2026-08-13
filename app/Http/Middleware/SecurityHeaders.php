@@ -26,32 +26,13 @@ class SecurityHeaders
                 try {
                     $current = trim(file_get_contents($hotPath));
 
-                    // Prefer an explicit env override if present (useful
-                    // when you expose the Vite server through a tunnel).
+                    // Only auto-update the hot file when the developer has
+                    // explicitly set the Vite origin via env. Avoid
+                    // overwriting the hot file with the app host which
+                    // breaks @vite in dev mode.
                     $envOrigin = env('VITE_DEV_SERVER_ORIGIN');
-
-                    if ($envOrigin) {
-                        $desired = $envOrigin;
-                    } else {
-                        // Build a sensible dev-server origin from the
-                        // incoming request. If the host is localhost/127.0.0.1
-                        // assume Vite runs on port 5173. If the host appears
-                        // to be a public tunnel (ngrok), don't append a port.
-                        $schemeHost = $request->getSchemeAndHttpHost();
-                        if (preg_match('/:\d+$/', $schemeHost)) {
-                            $desired = $schemeHost;
-                        } else {
-                            $hostOnly = $request->getHost();
-                            if (in_array($hostOnly, ['localhost', '127.0.0.1'])) {
-                                $desired = $request->getScheme() . '://' . $hostOnly . ':5173';
-                            } else {
-                                $desired = $schemeHost;
-                            }
-                        }
-                    }
-
-                    if ($current !== $desired) {
-                        @file_put_contents($hotPath, $desired);
+                    if ($envOrigin && $current !== $envOrigin) {
+                        @file_put_contents($hotPath, $envOrigin);
                     }
                 } catch (\Throwable $e) {
                     // best-effort only; do not interrupt the request
@@ -97,6 +78,40 @@ class SecurityHeaders
             $scriptSrc .= ' http://localhost:5173 http://127.0.0.1:5173';
             $styleSrc .= ' http://localhost:5173 http://127.0.0.1:5173';
             $connectSrc .= ' http://localhost:5173 http://127.0.0.1:5173 ws://localhost:5173 ws://127.0.0.1:5173';
+            // Also include the currently configured Vite origin, which
+            // may live in the `public/hot` file (dev mode) or be set via
+            // `VITE_DEV_SERVER_ORIGIN` in .env when using tunnels.
+            $viteOrigin = null;
+            $hotPath = public_path('hot');
+            if (file_exists($hotPath)) {
+                try {
+                    $hot = trim(@file_get_contents($hotPath));
+                    if (! empty($hot)) {
+                        $viteOrigin = $hot;
+                    }
+                } catch (\Throwable $e) {
+                    // ignore
+                }
+            }
+
+            if (empty($viteOrigin)) {
+                $viteOrigin = env('VITE_DEV_SERVER_ORIGIN');
+            }
+
+            if (! empty($viteOrigin)) {
+                // ensure it has a scheme
+                if (! preg_match('#^https?://#', $viteOrigin)) {
+                    $viteOrigin = 'http://' . ltrim($viteOrigin, '/');
+                }
+
+                $scriptSrc .= ' ' . $viteOrigin;
+                $styleSrc .= ' ' . $viteOrigin;
+                $connectSrc .= ' ' . $viteOrigin;
+
+                // also allow websocket variant (ws/wss)
+                $ws = preg_replace('#^https?#', 'ws', $viteOrigin);
+                $connectSrc .= ' ' . $ws;
+            }
 
             try {
                 $host = request()->getSchemeAndHttpHost();

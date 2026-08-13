@@ -87,6 +87,13 @@ class SecurityHeaders
                 try {
                     $hot = trim(@file_get_contents($hotPath));
                     if (! empty($hot)) {
+                        // Replace 0.0.0.0 (bind address) with localhost so
+                        // browser clients can reach the dev server.
+                        if (strpos($hot, '0.0.0.0') !== false) {
+                            $hot = str_replace('0.0.0.0', 'localhost', $hot);
+                            @file_put_contents($hotPath, $hot);
+                        }
+
                         $viteOrigin = $hot;
                     }
                 } catch (\Throwable $e) {

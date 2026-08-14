@@ -16,10 +16,10 @@ class SecurityHeaders
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // If a Vite hot file exists in local dev, ensure it points to the
-        // current incoming host (ngrok tunnels present the public host
-        // on the request). This lets the laravel-vite-plugin generate
-        // asset URLs that match the tunnel host automatically.
+        // If a Vite hot file exists in local dev, keep it in sync with the
+        // explicitly configured VITE_DEV_SERVER_ORIGIN (e.g. an ngrok
+        // tunnel host set by the developer) so laravel-vite-plugin
+        // generates asset URLs that match. Never derived from the request.
         if (app()->isLocal()) {
             $hotPath = public_path('hot');
             if (file_exists($hotPath)) {
@@ -73,8 +73,10 @@ class SecurityHeaders
 
         if (app()->isLocal()) {
             // Vite's dev server (HMR) runs on its own origin/port locally.
-            // When using tunnels (ngrok) the incoming request host should
-            // also be allowed by CSP so the browser can fetch HMR/assets.
+            // Trusted origins here come only from server-side configuration
+            // (VITE_DEV_SERVER_ORIGIN / the hot file our own build tooling
+            // writes) — never from the incoming request's Host header,
+            // which a client fully controls.
             $scriptSrc .= ' http://localhost:5173 http://127.0.0.1:5173';
             $styleSrc .= ' http://localhost:5173 http://127.0.0.1:5173';
             $connectSrc .= ' http://localhost:5173 http://127.0.0.1:5173 ws://localhost:5173 ws://127.0.0.1:5173';
@@ -118,20 +120,6 @@ class SecurityHeaders
                 // also allow websocket variant (ws/wss)
                 $ws = preg_replace('#^https?#', 'ws', $viteOrigin);
                 $connectSrc .= ' ' . $ws;
-            }
-
-            try {
-                $host = request()->getSchemeAndHttpHost();
-                if (! empty($host)) {
-                    $scriptSrc .= ' ' . $host;
-                    $styleSrc .= ' ' . $host;
-
-                    // also allow the websocket variant for the same host
-                    $wsHost = preg_replace('#^https?#', 'ws', $host);
-                    $connectSrc .= ' ' . $host . ' ' . $wsHost;
-                }
-            } catch (\Throwable $e) {
-                // ignore request-related errors in CLI/testing
             }
         }
 

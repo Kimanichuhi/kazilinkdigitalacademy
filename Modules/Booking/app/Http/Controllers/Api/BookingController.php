@@ -149,6 +149,15 @@ class BookingController extends Controller
     {
         $booking = $this->ownedBooking($request, $id);
 
+        // Normalize before validating length/format — otherwise whitespace
+        // that the regex allows (then gets stripped below) could let a
+        // shorter-than-intended reference slip past min:6.
+        if ($request->filled('payment_reference')) {
+            $request->merge([
+                'payment_reference' => strtoupper(preg_replace('/\s+/', '', (string) $request->input('payment_reference'))),
+            ]);
+        }
+
         $data = $request->validate([
             'consent_given' => 'accepted',
             'payment_reference' => [
@@ -156,15 +165,13 @@ class BookingController extends Controller
                 'string',
                 'min:6',
                 'max:12',
-                'regex:/^[A-Za-z0-9\s]+$/',
+                'regex:/^[A-Z0-9]+$/',
             ],
         ]);
 
         $booking = $bookings->finalize($booking, [
             'consent_given' => true,
-            'payment_reference' => isset($data['payment_reference'])
-                ? strtoupper(preg_replace('/\s+/', '', $data['payment_reference']))
-                : null,
+            'payment_reference' => $data['payment_reference'] ?? null,
         ]);
 
         return response()->json(['data' => (new BookingResource($booking))->resolve()]);

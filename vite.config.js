@@ -1,9 +1,15 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 
+// Binds to localhost by default. Set VITE_HOST (e.g. "0.0.0.0") only when
+// you deliberately need the dev/preview server reachable from the LAN or a
+// tunnel (ngrok) — that also exposes unbundled source and the HMR socket to
+// anyone who can reach the port, so it's an opt-in, not a default.
+const devHost = process.env.VITE_HOST || 'localhost';
+
 export default defineConfig({
     server: {
-        host: '0.0.0.0',
+        host: devHost,
         port: 5173,
         origin: process.env.VITE_DEV_SERVER_ORIGIN || undefined,
         hmr: {
@@ -13,7 +19,7 @@ export default defineConfig({
         },
     },
     preview: {
-        host: '0.0.0.0',
+        host: devHost,
         port: 4173,
     },
     plugins: [

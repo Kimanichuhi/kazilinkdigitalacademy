@@ -20,10 +20,9 @@ use Modules\Payment\Contracts\MpesaPaymentContract;
  * required — mirrors the source's anon-insert flow.
  *
  * The booking row is created as soon as Details is complete (status
- * `awaiting_payment`), not at final submit — this lets the M-Pesa method
- * gate progress on a real STK Push confirmation before enrollment is
- * considered final, matching the payment flow requirements. Other payment
- * methods (card/bank) are unaffected and proceed exactly as before.
+ * `awaiting_payment`), not at final submit. M-Pesa currently collects the
+ * customer-entered transaction code for admin confirmation while the STK
+ * Push path is prepared for a later production rollout.
  */
 #[Layout('core::components.layouts.public', ['title' => 'Book Your Training'])]
 class BookingWizard extends Component
@@ -188,6 +187,19 @@ class BookingWizard extends Component
 
     public function continueFromPayment(): void
     {
+        if ($this->paymentMethod === 'mpesa') {
+            $this->paymentReference = strtoupper(preg_replace('/\s+/', '', $this->paymentReference));
+
+            $this->validate([
+                'paymentReference' => ['required', 'string', 'min:6', 'max:12', 'regex:/^[A-Z0-9]+$/'],
+            ], [
+                'paymentReference.required' => 'Enter your M-Pesa confirmation code',
+                'paymentReference.min' => 'Enter a valid M-Pesa confirmation code',
+                'paymentReference.max' => 'Enter a valid M-Pesa confirmation code',
+                'paymentReference.regex' => 'Use only letters and numbers from the M-Pesa message',
+            ]);
+        }
+
         $this->step = 4;
     }
 
@@ -267,7 +279,7 @@ class BookingWizard extends Component
 
         $booking = $bookings->finalize($booking, $this->bookingFields() + [
             'payment_method' => $this->paymentMethod,
-            'payment_reference' => $this->paymentMethod !== 'mpesa' ? ($this->paymentReference ?: null) : null,
+            'payment_reference' => $this->paymentReference ?: null,
         ]);
 
         $this->bookingNumber = $booking->booking_number;

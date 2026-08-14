@@ -77,6 +77,11 @@
                             <td class="px-5 py-3 hidden xl:table-cell text-xs text-muted-foreground whitespace-nowrap">{{ $booking->created_at->format('d M Y') }}</td>
                             <td class="px-5 py-3">
                                 <div class="flex gap-1">
+                                    @if ($canUpdateStatus && $booking->status->value === 'awaiting_payment' && $booking->payment_reference)
+                                        <button wire:click="confirmPayment('{{ $booking->id }}')" wire:confirm="Confirm this payment reference and mark the booking as paid?" class="p-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors" title="Confirm Payment">
+                                            <x-core::icon name="check-circle" class="w-3.5 h-3.5" />
+                                        </button>
+                                    @endif
                                     @if ($canUpdateStatus && $booking->status->value === 'pending_approval')
                                         <button wire:click="updateStatus('{{ $booking->id }}', 'approved')" class="p-1.5 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors" title="Approve">
                                             <x-core::icon name="check-circle" class="w-3.5 h-3.5" />
@@ -124,6 +129,9 @@
                     <div class="flex justify-between"><span class="text-muted-foreground">Phone</span><span data-clarity-mask="true">{{ $viewingBooking->phone }}</span></div>
                     <div class="flex justify-between"><span class="text-muted-foreground">County</span><span>{{ $viewingBooking->county ?: '—' }}</span></div>
                     <div class="flex justify-between"><span class="text-muted-foreground">Constituency</span><span>{{ $viewingBooking->constituency ?: '—' }}</span></div>
+                    <div class="pt-3 border-t border-border flex justify-between"><span class="text-muted-foreground">Payment Method</span><span class="capitalize">{{ $viewingBooking->payment_method ?: '—' }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">Payment Status</span><span class="capitalize">{{ $viewingBooking->payment_status->value }}</span></div>
+                    <div class="flex justify-between"><span class="text-muted-foreground">Payment Reference</span><span class="font-mono" data-clarity-mask="true">{{ $viewingBooking->payment_reference ?: '—' }}</span></div>
 
                     <div class="pt-3 border-t border-border flex items-center justify-between">
                         <span class="text-muted-foreground">National ID</span>

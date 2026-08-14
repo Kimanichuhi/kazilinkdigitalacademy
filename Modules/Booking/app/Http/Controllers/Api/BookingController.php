@@ -68,7 +68,7 @@ class BookingController extends Controller
             'phone' => 'required|string|min:9',
             'county' => 'required|string',
             'constituency' => 'required|string',
-            'payment_method' => 'required|string|in:mpesa,bank,stripe',
+            'payment_method' => 'required|string|in:mpesa,bank',
             'id_number' => 'nullable|string',
             'date_of_birth' => 'nullable|date',
             'gender' => 'nullable|string',
@@ -151,12 +151,20 @@ class BookingController extends Controller
 
         $data = $request->validate([
             'consent_given' => 'accepted',
-            'payment_reference' => 'nullable|string',
+            'payment_reference' => [
+                $booking->payment_method === 'mpesa' ? 'required' : 'nullable',
+                'string',
+                'min:6',
+                'max:12',
+                'regex:/^[A-Za-z0-9\s]+$/',
+            ],
         ]);
 
         $booking = $bookings->finalize($booking, [
             'consent_given' => true,
-            'payment_reference' => $booking->payment_method !== 'mpesa' ? ($data['payment_reference'] ?? null) : null,
+            'payment_reference' => isset($data['payment_reference'])
+                ? strtoupper(preg_replace('/\s+/', '', $data['payment_reference']))
+                : null,
         ]);
 
         return response()->json(['data' => (new BookingResource($booking))->resolve()]);

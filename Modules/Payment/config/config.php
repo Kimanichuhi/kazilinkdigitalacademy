@@ -22,8 +22,4 @@ return [
         'branch' => env('BANK_BRANCH', 'Westlands, Nairobi'),
     ],
 
-    'stripe' => [
-        'key' => env('STRIPE_KEY'),
-        'secret' => env('STRIPE_SECRET'),
-    ],
 ];

@@ -9,6 +9,7 @@ use Livewire\WithPagination;
 use Modules\Booking\Enums\BookingStatus;
 use Modules\Booking\Events\NationalIdRevealed;
 use Modules\Booking\Models\Booking;
+use Modules\Booking\Services\BookingLookupService;
 use Modules\Booking\Services\BookingLifecycle;
 use Modules\Core\Support\RoleGroups;
 
@@ -43,6 +44,23 @@ class BookingsIndex extends Component
 
         $booking = Booking::findOrFail($id);
         $lifecycle->transition($booking, BookingStatus::from($newStatus));
+    }
+
+    public function confirmPayment(string $id, BookingLookupService $bookings): void
+    {
+        abort_unless(auth()->user()?->hasRole(RoleGroups::ADMIN), 403);
+
+        $booking = Booking::findOrFail($id);
+
+        if (! $booking->payment_reference) {
+            return;
+        }
+
+        $bookings->markPaid(
+            $booking->id,
+            $booking->payment_reference,
+            (string) ($booking->total_amount ?? 0),
+        );
     }
 
     public function view(string $id): void

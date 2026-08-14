@@ -9,7 +9,7 @@ Course-enrollment platform for Kazilink Digital Academy — programs, cohorts, b
 - **Livewire 3** + Alpine.js (bundled by Livewire) for interactivity, Laravel Breeze (Blade) for auth scaffolding
 - **spatie/laravel-permission** — 8 roles: `super_admin`, `admin`, `trainer`, `content_manager`, `finance`, `marketing`, `support`, `student`
 - Database, session, cache, and queue all run on the `database`/`mysql` driver — nothing needs Redis or a persistent worker
-- M-Pesa Daraja STK Push, static bank-transfer details, and a Stripe stub for payments
+- M-Pesa Daraja STK Push and static bank-transfer details for payments
 - ApexCharts for admin analytics
 - **Laravel Sanctum** — token auth for the REST API (mobile app / admin app / future integrations), see [API](#api) below
 
@@ -72,14 +72,12 @@ All variables live in `.env.example` with inline comments. Groups worth knowing 
 | Storage | `FILESYSTEM_DISK=public` | Uploaded images (programs, blog, ads, avatars, etc.) go through the `public` disk; run `php artisan storage:link` after every fresh deploy |
 | M-Pesa | `MPESA_*` | Daraja STK Push credentials. Blank by default — the Payment module degrades gracefully (booking stays `awaiting_payment`, nothing 500s) until real sandbox/production credentials are added. `MPESA_CALLBACK_URL` must be a publicly reachable HTTPS URL for Safaricom to call back to (won't work against `localhost`) |
 | Bank | `BANK_*` | Static bank-transfer details shown to students — no integration, just config |
-| Stripe | `STRIPE_*` | Stub only, mirrors the source app — no real Stripe SDK call exists anywhere in the codebase |
 | Clarity | `CLARITY_PROJECT_ID` | Microsoft Clarity session replay. Blank by default — the tracking snippet (`<x-core::clarity />`, included in the public/admin/auth layouts) simply isn't rendered until this is set. Sensitive fields (booking phone/ID number/payment reference, admin PII screens) carry `data-clarity-mask="true"` regardless |
 
 ## Payments
 
 - **M-Pesa**: full Daraja STK Push pipeline (`Modules/Payment`) — OAuth token, STK push, callback handler at `POST /payments/mpesa/callback`, and a `payment:reconcile-mpesa` scheduled command that actively queries Daraja for any STK push whose callback never arrived (important since a dev/staging box often isn't reachable by Safaricom at all).
 - **Bank transfer**: student enters a reference code manually after paying externally; an admin/finance user confirms it via the Bookings screen.
-- **Stripe**: intentionally inert, matching the source.
 
 ## Scheduled tasks & queue (shared hosting)
 

@@ -7,6 +7,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ? $title.' | Admin | '.config('app.name') : 'Admin | '.config('app.name') }}</title>
     <link rel="icon" href="{{ asset('favicon.jpeg') }}">
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,900&display=swap" rel="stylesheet" />
     <script nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}">
         if (localStorage.getItem('theme') === 'dark') {
             document.documentElement.classList.add('dark');

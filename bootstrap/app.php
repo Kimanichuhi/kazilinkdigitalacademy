@@ -22,6 +22,13 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->append(SecurityHeaders::class);
 
+        // No fixed proxy IP list to trust here — the app always sits behind
+        // some TLS-terminating reverse proxy (ngrok tunnels, Railway,
+        // Render, cPanel's LiteSpeed front end), never talks to browsers
+        // directly. Without this, $request->secure() reports false behind
+        // any of them, which silently drops HSTS and the Secure cookie flag.
+        $middleware->trustProxies(at: '*');
+
         // Safaricom's Daraja callback is an unauthenticated server-to-server
         // POST with no CSRF token, but it's registered on Payment's web.php
         // (to match the MPESA_CALLBACK_URL path already set in .env), so it

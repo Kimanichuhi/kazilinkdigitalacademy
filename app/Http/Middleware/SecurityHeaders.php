@@ -68,7 +68,11 @@ class SecurityHeaders
         // switching to Alpine's separate CSP-build with precompiled
         // expressions, which is a much larger change than this pass.
         $scriptSrc = "'self' 'unsafe-eval' 'nonce-{$nonce}'";
-        $styleSrc = "'self' 'unsafe-inline'";
+        // fonts.bunny.net serves both the @font-face stylesheet (style-src)
+        // and the woff2 files it references (font-src) — see the Inter
+        // <link> tags in the public/admin/guest layouts.
+        $styleSrc = "'self' 'unsafe-inline' https://fonts.bunny.net";
+        $fontSrc = "'self' data: https://fonts.bunny.net";
         $connectSrc = "'self'";
 
         if (app()->isLocal()) {
@@ -137,7 +141,7 @@ class SecurityHeaders
             // there's no nonce-only content to protect here anyway.
             "style-src {$styleSrc}",
             "img-src 'self' data: https:",
-            "font-src 'self' data:",
+            "font-src {$fontSrc}",
             "connect-src {$connectSrc}",
             "frame-ancestors 'none'",
             "base-uri 'self'",

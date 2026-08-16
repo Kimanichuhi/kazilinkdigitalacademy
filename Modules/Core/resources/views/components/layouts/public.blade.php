@@ -8,6 +8,8 @@
     <title>{{ $title ? $title.' | '.config('app.name') : config('app.name').' - Learn. Earn. Thrive Online.' }}</title>
     <meta name="description" content="Kenya's #1 online income skills academy. Learn practical digital skills and start earning from anywhere.">
     <link rel="icon" href="{{ asset('favicon.jpeg') }}">
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,900&display=swap" rel="stylesheet" />
     <script nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}">
         if (localStorage.getItem('theme') === 'dark') {
             document.documentElement.classList.add('dark');

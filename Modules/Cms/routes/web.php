@@ -28,7 +28,7 @@ Route::get('/blog/{slug}', [BlogShowController::class, 'show'])->name('blog.show
 
 // Legal pages — Page+PageBlock backed, admin-editable via /admin/pages.
 Route::get('/{slug}', [PageShowController::class, 'show'])
-    ->whereIn('slug', ['privacy', 'terms', 'refund'])
+    ->whereIn('slug', ['privacy', 'terms', 'refund', 'ol-kalou-offer'])
     ->name('pages.show');
 
 Route::middleware(['auth', 'verified'])->group(function () {

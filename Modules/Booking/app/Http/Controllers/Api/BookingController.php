@@ -10,6 +10,7 @@ use Modules\Academy\Contracts\ProgramLookupContract;
 use Modules\Booking\Http\Resources\BookingResource;
 use Modules\Booking\Models\Booking;
 use Modules\Booking\Services\BookingCreationService;
+use Modules\Booking\Support\OlKalouOffer;
 use Modules\Payment\Contracts\MpesaPaymentContract;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -116,7 +117,10 @@ class BookingController extends Controller
             'special_requirements' => $data['special_requirements'] ?? null,
             'consent_given' => false,
             'user_id' => $request->user()->id,
-            'total_amount' => $cohort['price'] ?? $program['price'] ?? null,
+            'total_amount' => OlKalouOffer::apply(
+                isset($cohort['price']) || isset($program['price']) ? (float) ($cohort['price'] ?? $program['price']) : null,
+                $data['constituency'],
+            ),
             'currency' => $program['currency'] ?? 'KES',
             'payment_method' => $data['payment_method'],
         ]);

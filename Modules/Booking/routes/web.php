@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Booking\Http\Controllers\BookingDocumentController;
 use Modules\Booking\Livewire\BookingWizard;
 use Modules\Booking\Livewire\StudentDashboard;
 
@@ -10,3 +11,7 @@ Route::get('/booking', BookingWizard::class)->name('booking.create');
 // Source guard: any authenticated user may view /student, no role check
 // (app/student/layout.tsx) — see MIGRATION-INVENTORY.md §4.
 Route::middleware(['auth'])->get('/student', StudentDashboard::class)->name('student.dashboard');
+
+Route::middleware(['auth'])
+    ->get('/bookings/{booking}/documents/{document}', [BookingDocumentController::class, 'show'])
+    ->name('booking.documents.show');

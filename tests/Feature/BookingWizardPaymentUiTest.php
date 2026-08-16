@@ -9,7 +9,7 @@ use Tests\TestCase;
 
 class BookingWizardPaymentUiTest extends TestCase
 {
-    public function test_payment_step_renders_manual_mpesa_and_stk_coming_soon(): void
+    public function test_payment_step_renders_mpesa_stk_push_and_bank(): void
     {
         $program = Program::factory()->create([
             'title' => 'AI Career Accelerator',
@@ -23,11 +23,11 @@ class BookingWizardPaymentUiTest extends TestCase
             ->set('selectedProgram', $program->toArray())
             ->set('step', 3)
             ->set('paymentMethod', 'mpesa')
-            ->assertSee('M-Pesa Code')
-            ->assertSee('M-Pesa Confirmation Code')
-            ->assertSee('STK Push')
-            ->assertSee('Coming soon')
+            ->assertSee('Pay with M-Pesa')
+            ->assertSee('Safaricom Phone Number')
+            ->assertSee('Pay Now')
             ->assertSee('Bank Transfer')
-            ->assertDontSee('Visa / Mastercard');
+            ->assertDontSee('Visa / Mastercard')
+            ->assertDontSee('Review Booking');
     }
 }

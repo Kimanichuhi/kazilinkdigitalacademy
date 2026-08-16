@@ -68,6 +68,9 @@
                             <td class="px-5 py-3 hidden lg:table-cell">
                                 <p class="font-medium">{{ $booking->currency }} {{ $booking->total_amount ? number_format($booking->total_amount) : '—' }}</p>
                                 <p class="text-xs text-muted-foreground capitalize">{{ $booking->payment_method ?? '—' }}</p>
+                                @if ($booking->constituency === 'Ol Kalou')
+                                    <span class="inline-block mt-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-green-100 text-green-700">15% Ol Kalou</span>
+                                @endif
                             </td>
                             <td class="px-5 py-3">
                                 <span class="text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap capitalize {{ $statusColors[$booking->status->value] ?? '' }}">
@@ -144,6 +147,23 @@
                             <button wire:click="revealId('{{ $viewingBooking->id }}')" wire:confirm="Revealing this ID number will be logged in the audit trail. Continue?" class="text-xs font-medium text-brand-600 hover:underline">
                                 Reveal ID
                             </button>
+                        </div>
+                    @endif
+
+                    @if ($viewingBooking->constituency === 'Ol Kalou')
+                        <div class="pt-3 border-t border-border">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-muted-foreground">Ol Kalou Special Offer</span>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700">15% discount applied</span>
+                            </div>
+                            @if (! empty($viewingBooking->documents_urls['ol_kalou_id_document_path'] ?? null))
+                                <span class="text-muted-foreground block mb-2">ID Document</span>
+                                <a href="{{ route('booking.documents.show', [$viewingBooking, 'ol_kalou_id_document']) }}" target="_blank" data-clarity-mask="true">
+                                    <img src="{{ route('booking.documents.show', [$viewingBooking, 'ol_kalou_id_document']) }}" alt="Ol Kalou ID document" class="w-full max-w-[220px] rounded-lg border border-border">
+                                </a>
+                            @else
+                                <p class="text-xs text-muted-foreground">No ID document was uploaded for verification. Confirm eligibility before final approval if needed.</p>
+                            @endif
                         </div>
                     @endif
                 </div>

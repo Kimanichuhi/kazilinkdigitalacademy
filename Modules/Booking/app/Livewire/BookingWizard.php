@@ -2,16 +2,20 @@
 
 namespace Modules\Booking\Livewire;
 
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Modules\Academy\Contracts\CohortLookupContract;
 use Modules\Academy\Contracts\ProgramLookupContract;
 use Modules\Booking\Models\Booking;
 use Modules\Booking\Services\BookingCreationService;
 use Modules\Booking\Support\KenyaCounties;
+use Modules\Booking\Support\OlKalouOffer;
+use Modules\Core\Support\ImageOptimizer;
 use Modules\Payment\Contracts\MpesaPaymentContract;
 
 /**
@@ -20,13 +24,16 @@ use Modules\Payment\Contracts\MpesaPaymentContract;
  * required — mirrors the source's anon-insert flow.
  *
  * The booking row is created as soon as Details is complete (status
- * `awaiting_payment`), not at final submit. M-Pesa currently collects the
- * customer-entered transaction code for admin confirmation while the STK
- * Push path is prepared for a later production rollout.
+ * `awaiting_payment`), not at final submit — this lets the M-Pesa method
+ * gate progress on a real STK Push confirmation before enrollment is
+ * considered final, matching the payment flow requirements. Other payment
+ * methods (bank) are unaffected and proceed exactly as before.
  */
 #[Layout('core::components.layouts.public', ['title' => 'Book Your Training'])]
 class BookingWizard extends Component
 {
+    use WithFileUploads;
+
     public int $step = 1;
 
     #[Url]
@@ -75,6 +82,20 @@ class BookingWizard extends Component
     public string $special_requirements = '';
 
     public bool $consent_given = false;
+
+    /**
+     * Ol Kalou always has a special offer running (see the Ol Kalou Special
+     * Offer Notice) — when the applicant's constituency is Ol Kalou, the
+     * Details step offers an optional ID-photo upload for eligibility
+     * verification. Optional and skippable: not providing it never blocks
+     * booking, matching the notice's "What happens if you do not provide
+     * your ID?" section.
+     */
+    public $idDocumentPhoto = null;
+
+    public ?string $idDocumentPath = null;
+
+    public bool $olKalouIdConsent = false;
 
     // Step 3 — payment
     public string $paymentMethod = 'mpesa';
@@ -148,11 +169,59 @@ class BookingWizard extends Component
     public function updatedCounty(): void
     {
         $this->constituency = '';
+        $this->clearOlKalouDocument();
+    }
+
+    public function updatedConstituency(): void
+    {
+        if (! $this->isOlKalouConstituency()) {
+            $this->clearOlKalouDocument();
+        }
     }
 
     public function constituencyOptions(): array
     {
         return KenyaCounties::all()[$this->county] ?? [];
+    }
+
+    public function isOlKalouConstituency(): bool
+    {
+        return OlKalouOffer::isEligible($this->constituency);
+    }
+
+    public function basePrice(): ?float
+    {
+        $price = $this->selectedCohort['price'] ?? $this->selectedProgram['price'] ?? null;
+
+        return $price !== null ? (float) $price : null;
+    }
+
+    public function amountDue(): ?float
+    {
+        return OlKalouOffer::apply($this->basePrice(), $this->constituency);
+    }
+
+    public function updatedIdDocumentPhoto(): void
+    {
+        // Same whitelist/size cap as Core\Livewire\ImageUpload — explicit
+        // mimes rather than the generic 'image' rule, which accepts SVG
+        // (can carry embedded scripts).
+        $this->validate([
+            'idDocumentPhoto' => 'mimes:jpg,jpeg,png,webp|max:5120',
+        ], [], ['idDocumentPhoto' => 'ID document photo']);
+
+        $this->deleteStoredIdDocument();
+
+        $path = $this->idDocumentPhoto->store('booking-id-documents', 'local');
+        ImageOptimizer::optimize(Storage::disk('local')->path($path));
+
+        $this->idDocumentPath = $path;
+        $this->idDocumentPhoto = null;
+    }
+
+    public function removeIdDocumentPhoto(): void
+    {
+        $this->clearOlKalouDocument();
     }
 
     public function continueFromProgram(): void
@@ -187,19 +256,6 @@ class BookingWizard extends Component
 
     public function continueFromPayment(): void
     {
-        if ($this->paymentMethod === 'mpesa') {
-            $this->paymentReference = strtoupper(preg_replace('/\s+/', '', $this->paymentReference));
-
-            $this->validate([
-                'paymentReference' => ['required', 'string', 'min:6', 'max:12', 'regex:/^[A-Z0-9]+$/'],
-            ], [
-                'paymentReference.required' => 'Enter your M-Pesa confirmation code',
-                'paymentReference.min' => 'Enter a valid M-Pesa confirmation code',
-                'paymentReference.max' => 'Enter a valid M-Pesa confirmation code',
-                'paymentReference.regex' => 'Use only letters and numbers from the M-Pesa message',
-            ]);
-        }
-
         $this->step = 4;
     }
 
@@ -227,7 +283,7 @@ class BookingWizard extends Component
         $this->mpesaError = null;
         $this->mpesaPushing = true;
 
-        $amount = $this->selectedCohort['price'] ?? $this->selectedProgram['price'] ?? 0;
+        $amount = $this->amountDue() ?? 0;
 
         $result = $mpesa->initiateForBooking(
             bookingId: $booking->id,
@@ -279,7 +335,7 @@ class BookingWizard extends Component
 
         $booking = $bookings->finalize($booking, $this->bookingFields() + [
             'payment_method' => $this->paymentMethod,
-            'payment_reference' => $this->paymentReference ?: null,
+            'payment_reference' => $this->paymentMethod !== 'mpesa' ? ($this->paymentReference ?: null) : null,
         ]);
 
         $this->bookingNumber = $booking->booking_number;
@@ -314,9 +370,12 @@ class BookingWizard extends Component
             'emergency_contact_name' => $this->emergency_contact_name ?: null,
             'emergency_contact_phone' => $this->emergency_contact_phone ?: null,
             'special_requirements' => $this->special_requirements ?: null,
+            'documents_urls' => $this->isOlKalouConstituency() && $this->idDocumentPath && $this->olKalouIdConsent
+                ? ['ol_kalou_id_document_path' => $this->idDocumentPath]
+                : null,
             'consent_given' => $this->consent_given,
             'user_id' => auth()->id(),
-            'total_amount' => $this->selectedCohort['price'] ?? $this->selectedProgram['price'] ?? null,
+            'total_amount' => $this->amountDue(),
             'currency' => $this->selectedProgram['currency'] ?? 'KES',
         ];
     }
@@ -329,6 +388,7 @@ class BookingWizard extends Component
             'phone' => 'required|string|min:9',
             'county' => 'required|string',
             'constituency' => 'required|string',
+            'olKalouIdConsent' => $this->idDocumentPath ? 'accepted' : 'nullable',
         ];
     }
 
@@ -343,7 +403,23 @@ class BookingWizard extends Component
             'phone.min' => 'Valid phone required',
             'county.required' => 'County is required',
             'constituency.required' => 'Constituency is required',
+            'olKalouIdConsent.accepted' => 'Confirm consent before uploading your ID for the Ol Kalou offer',
         ];
+    }
+
+    protected function clearOlKalouDocument(): void
+    {
+        $this->deleteStoredIdDocument();
+        $this->idDocumentPath = null;
+        $this->idDocumentPhoto = null;
+        $this->olKalouIdConsent = false;
+    }
+
+    protected function deleteStoredIdDocument(): void
+    {
+        if ($this->idDocumentPath) {
+            Storage::disk('local')->delete($this->idDocumentPath);
+        }
     }
 
     public function render(ProgramLookupContract $programs, CohortLookupContract $cohorts)

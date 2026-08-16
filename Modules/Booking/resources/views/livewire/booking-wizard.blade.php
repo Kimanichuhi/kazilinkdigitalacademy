@@ -5,8 +5,10 @@
         3 => ['label' => 'Payment', 'icon' => 'dollar-sign'],
         4 => ['label' => 'Review', 'icon' => 'shield'],
     ];
-    $amount = $selectedCohort['price'] ?? $selectedProgram['price'] ?? null;
+    $basePrice = $this->basePrice();
+    $amount = $this->amountDue();
     $currency = $selectedProgram['currency'] ?? 'KES';
+    $olKalouDiscountApplied = $this->isOlKalouConstituency() && $basePrice !== null && $amount !== null && $amount < $basePrice;
 @endphp
 <div>
     @if ($step === 5 && $bookingNumber)
@@ -193,7 +195,7 @@
                             </div>
                             <div>
                                 <label class="text-sm font-medium mb-1.5 block">Constituency *</label>
-                                <select wire:model="constituency" @if (! $county) disabled @endif class="w-full px-3 py-2.5 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 bg-background disabled:opacity-50 disabled:cursor-not-allowed">
+                                <select wire:model.live="constituency" @if (! $county) disabled @endif class="w-full px-3 py-2.5 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 bg-background disabled:opacity-50 disabled:cursor-not-allowed">
                                     <option value="">{{ $county ? 'Select constituency' : 'Select a county first' }}</option>
                                     @foreach ($this->constituencyOptions() as $c)
                                         <option value="{{ $c }}">{{ $c }}</option>
@@ -202,6 +204,51 @@
                                 @error('constituency') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                             </div>
                         </div>
+
+                        @if ($this->isOlKalouConstituency())
+                            <div class="bg-green-50 border border-green-200 rounded-xl p-4 mt-4">
+                                <span class="inline-block text-xs font-semibold px-2 py-1 rounded-full bg-green-600 text-white mb-2">Ol Kalou Special Offer — 15% Off</span>
+                                <p class="text-sm text-foreground mb-3">
+                                    Good news — as an Ol Kalou constituency resident, <strong>15% is automatically taken off your program price</strong>. You'll see the discounted total in the Payment step; no code or approval needed.
+                                    A photo of your ID is optional and only helps us confirm your eligibility — it doesn't affect the discount, and you can book without it. See the
+                                    <a href="{{ url('/ol-kalou-offer') }}" target="_blank" class="text-brand-600 hover:underline">Ol Kalou Special Offer Notice</a> for full details.
+                                </p>
+
+                                <label class="flex items-start gap-3 mb-3">
+                                    <input type="checkbox" wire:model="olKalouIdConsent" class="mt-1 w-4 h-4 rounded border-border text-brand-500 focus:ring-brand-500">
+                                    <span class="text-xs text-muted-foreground">
+                                        I understand Kazilink will process my ID document only to verify my Ol Kalou eligibility, and that a false constituency claim may result in the discount being revoked.
+                                    </span>
+                                </label>
+                                @error('olKalouIdConsent') <p class="text-red-500 text-xs mb-2">{{ $message }}</p> @enderror
+
+                                @if ($idDocumentPath)
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-16 h-16 rounded-lg border border-green-200 bg-white flex items-center justify-center">
+                                            <x-core::icon name="shield-check" class="w-7 h-7 text-green-600" />
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-green-700">Photo uploaded securely</p>
+                                            <button type="button" wire:click="removeIdDocumentPhoto" class="text-xs text-red-600 hover:underline">Remove photo</button>
+                                        </div>
+                                    </div>
+                                @else
+                                    <label class="block">
+                                        <span class="sr-only">Upload or take a photo of your ID</span>
+                                        <input
+                                            type="file"
+                                            wire:model="idDocumentPhoto"
+                                            accept="image/*"
+                                            capture="environment"
+                                            data-clarity-mask="true"
+                                            class="block w-full text-sm text-muted-foreground file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-brand-500 file:text-white hover:file:bg-brand-600"
+                                        >
+                                    </label>
+                                    <div wire:loading wire:target="idDocumentPhoto" class="text-xs text-muted-foreground mt-1">Uploading…</div>
+                                    @error('idDocumentPhoto') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                                @endif
+                            </div>
+                        @endif
                     </div>
 
                     <div>
@@ -282,15 +329,21 @@
                     @if ($amount)
                         <div class="bg-green-50 border border-green-200 rounded-xl p-4">
                             <p class="text-sm text-muted-foreground mb-1">Total Amount Due</p>
+                            @if ($olKalouDiscountApplied)
+                                <div class="flex flex-wrap items-baseline gap-2 mb-1">
+                                    <span class="text-base text-muted-foreground line-through">{{ $currency }} {{ number_format($basePrice) }}</span>
+                                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-600 text-white">Ol Kalou Special Offer: 15% off applied</span>
+                                </div>
+                            @endif
                             <p class="text-3xl font-black text-green-700">{{ $currency }} {{ number_format($amount) }}</p>
                         </div>
                     @endif
 
                     <div>
                         <h3 class="font-semibold mb-3">Select Payment Method</h3>
-                        <div class="grid sm:grid-cols-3 gap-3">
+                        <div class="grid sm:grid-cols-2 gap-3">
                             @foreach ([
-                                ['value' => 'mpesa', 'label' => 'M-Pesa Code', 'desc' => 'Paste confirmation code', 'icon' => '📱'],
+                                ['value' => 'mpesa', 'label' => 'M-Pesa', 'desc' => 'Safaricom STK Push', 'icon' => '📱'],
                                 ['value' => 'bank', 'label' => 'Bank Transfer', 'desc' => 'Direct bank transfer', 'icon' => '🏦'],
                             ] as $m)
                                 <button
@@ -306,38 +359,40 @@
                                     @endif
                                 </button>
                             @endforeach
-                            <div class="border-2 border-dashed border-border rounded-xl p-4 text-center bg-muted/30 opacity-80">
-                                <div class="text-2xl mb-1">📲</div>
-                                <div class="flex flex-col items-center gap-1">
-                                    <p class="font-semibold text-sm">STK Push</p>
-                                    <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Coming soon</span>
-                                </div>
-                                <p class="text-xs text-muted-foreground mt-1">Phone prompt</p>
-                            </div>
                         </div>
                     </div>
 
                     @if ($paymentMethod === 'mpesa')
                         <div class="bg-card border border-border rounded-xl p-5 space-y-4">
-                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                                <h4 class="font-semibold">Pay with M-Pesa</h4>
-                                <span class="w-fit text-xs font-semibold px-2 py-1 rounded-full bg-green-100 text-green-700">Manual confirmation</span>
-                            </div>
+                            <h4 class="font-semibold">Pay with M-Pesa</h4>
 
-                            <p class="text-sm text-muted-foreground">
-                                After paying from M-Pesa, paste the confirmation code from your SMS. Our admin team will confirm the payment before approval.
-                            </p>
+                            @if ($mpesaCheckoutRequestId)
+                                <livewire:payment::mpesa-status-poller :checkout-request-id="$mpesaCheckoutRequestId" :key="'mpesa-poll-'.$mpesaCheckoutRequestId" />
+                            @else
+                                <div>
+                                    <label class="text-sm font-medium mb-1.5 block">Safaricom Phone Number</label>
+                                    <input wire:model="mpesaPhone" data-clarity-mask="true" placeholder="07XXXXXXXX" class="w-full px-3 py-2.5 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 bg-background">
+                                    @error('mpesaPhone') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                                </div>
 
-                            <div>
-                                <label class="text-sm font-medium mb-1.5 block">M-Pesa Confirmation Code</label>
-                                <input
-                                    wire:model.live.debounce.250ms="paymentReference"
-                                    data-clarity-mask="true"
-                                    placeholder="FSC6AFDCS"
-                                    class="w-full uppercase tracking-wider px-3 py-2.5 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 bg-background"
+                                @if ($mpesaError)
+                                    <p class="text-red-500 text-xs flex items-center gap-1"><x-core::icon name="x" class="w-3.5 h-3.5" />{{ $mpesaError }}</p>
+                                @endif
+
+                                <button
+                                    type="button"
+                                    wire:click="payNow"
+                                    wire:loading.attr="disabled"
+                                    wire:target="payNow"
+                                    class="w-full inline-flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors disabled:opacity-50"
                                 >
-                                @error('paymentReference') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                            </div>
+                                    <span wire:loading.remove wire:target="payNow">Pay Now</span>
+                                    <span wire:loading wire:target="payNow" class="inline-flex items-center gap-2">
+                                        <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                                        Waiting for STK Push...
+                                    </span>
+                                </button>
+                            @endif
                         </div>
                     @endif
 
@@ -357,9 +412,11 @@
                         <button type="button" wire:click="goToStep(2)" class="inline-flex items-center gap-2 border border-border rounded-xl px-4 py-2.5 text-sm font-medium hover:bg-muted transition-colors">
                             <x-core::icon name="chevron-left" class="w-4 h-4" /> Back
                         </button>
-                        <button wire:click="continueFromPayment" class="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors">
-                            Review Booking <x-core::icon name="arrow-right" class="w-4 h-4" />
-                        </button>
+                        @if ($paymentMethod !== 'mpesa')
+                            <button wire:click="continueFromPayment" class="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors">
+                                Review Booking <x-core::icon name="arrow-right" class="w-4 h-4" />
+                            </button>
+                        @endif
                     </div>
                 </div>
             @endif
@@ -376,7 +433,13 @@
                             @if ($selectedCohort)
                                 <p class="text-sm text-brand-600 mt-0.5">{{ $selectedCohort['name'] }}</p>
                             @endif
-                            <p class="text-lg font-black mt-2">{{ $currency }} {{ $amount ? number_format($amount) : '' }}</p>
+                            @if ($olKalouDiscountApplied)
+                                <div class="flex flex-wrap items-baseline gap-2 mt-2">
+                                    <span class="text-sm text-muted-foreground line-through">{{ $currency }} {{ number_format($basePrice) }}</span>
+                                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-600 text-white">15% Ol Kalou discount</span>
+                                </div>
+                            @endif
+                            <p class="text-lg font-black mt-1">{{ $currency }} {{ $amount ? number_format($amount) : '' }}</p>
                         </div>
                         <div class="p-5">
                             <h3 class="font-semibold text-sm text-muted-foreground uppercase tracking-wider mb-3">Personal Details</h3>
@@ -386,6 +449,9 @@
                                 <div data-clarity-mask="true"><span class="text-muted-foreground">Phone: </span>{{ $phone }}</div>
                                 <div><span class="text-muted-foreground">County: </span>{{ $county ?: '—' }}</div>
                                 <div><span class="text-muted-foreground">Constituency: </span>{{ $constituency ?: '—' }}</div>
+                                @if ($this->isOlKalouConstituency())
+                                    <div><span class="text-muted-foreground">Ol Kalou ID Photo: </span>{{ $idDocumentPath ? 'Uploaded securely' : 'Not provided' }}</div>
+                                @endif
                             </div>
                         </div>
                         <div class="p-5">

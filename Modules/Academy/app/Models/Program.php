@@ -29,6 +29,7 @@ class Program extends BaseModel
     protected function casts(): array
     {
         return [
+            'thumbnail_url' => \Modules\Core\Casts\StorageUrl::class,
             'gallery_urls' => 'array',
             'curriculum' => 'array',
             'outcomes' => 'array',

@@ -26,6 +26,7 @@ class Trainer extends BaseModel
     protected function casts(): array
     {
         return [
+            'avatar_url' => \Modules\Core\Casts\StorageUrl::class,
             'specializations' => 'array',
             'social_links' => 'array',
             'rating' => 'decimal:2',

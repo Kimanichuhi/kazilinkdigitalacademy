@@ -25,6 +25,7 @@ class BlogPost extends BaseModel
     protected function casts(): array
     {
         return [
+            'thumbnail_url' => \Modules\Core\Casts\StorageUrl::class,
             'tags' => 'array',
             'is_featured' => 'boolean',
             'is_published' => 'boolean',

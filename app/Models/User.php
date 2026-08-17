@@ -61,6 +61,7 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
+            'avatar_url' => \Modules\Core\Casts\StorageUrl::class,
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',

@@ -25,6 +25,7 @@ class Advertisement extends BaseModel
     protected function casts(): array
     {
         return [
+            'desktop_image_url' => \Modules\Core\Casts\StorageUrl::class,
             'placement' => 'array',
             'target_audience' => 'array',
             'publish_date' => 'datetime',

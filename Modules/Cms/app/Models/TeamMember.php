@@ -25,6 +25,7 @@ class TeamMember extends BaseModel
     protected function casts(): array
     {
         return [
+            'avatar_url' => \Modules\Core\Casts\StorageUrl::class,
             'social_links' => 'array',
             'is_featured' => 'boolean',
             'is_active' => 'boolean',

@@ -27,6 +27,7 @@ class Testimonial extends BaseModel
     protected function casts(): array
     {
         return [
+            'student_avatar_url' => \Modules\Core\Casts\StorageUrl::class,
             'rating' => 'decimal:2',
             'is_featured' => 'boolean',
             'is_published' => 'boolean',
